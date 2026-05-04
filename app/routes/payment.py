@@ -1,0 +1,120 @@
+"""
+PayFast checkout flow.
+
+Creates the redirect URL that sends the user to PayFast's hosted checkout for
+Tier 2 (R99 diagnostic report) or Tier 3 (R450+ rewrite). PayFast posts back
+to /api/webhook/payfast — see app/routes/webhook.py.
+
+PayFast docs: https://developers.payfast.co.za/docs#process_url
+"""
+
+import hashlib
+import os
+import urllib.parse
+from typing import Literal
+
+from fastapi import APIRouter, HTTPException
+
+from app.db import get_scan
+
+router = APIRouter()
+
+PAYFAST_MERCHANT_ID = os.environ.get("PAYFAST_MERCHANT_ID", "")
+PAYFAST_MERCHANT_KEY = os.environ.get("PAYFAST_MERCHANT_KEY", "")
+PAYFAST_PASSPHRASE = os.environ.get("PAYFAST_PASSPHRASE", "")
+PAYFAST_SANDBOX = os.environ.get("PAYFAST_SANDBOX", "true").lower() == "true"
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://cited.co.za")
+
+PROCESS_URL_LIVE = "https://www.payfast.co.za/eng/process"
+PROCESS_URL_SANDBOX = "https://sandbox.payfast.co.za/eng/process"
+
+# Tier definitions. Keep these in sync with the landing-page pricing.
+TIERS = {
+    "diagnostic": {
+        "amount": "99.00",
+        "item_name": "Cited Full Diagnostic Report",
+        "tier_id": 2,
+    },
+    "rewrite_basic": {
+        "amount": "450.00",
+        "item_name": "Cited CV Rewrite — Standard",
+        "tier_id": 3,
+    },
+    "rewrite_premium": {
+        "amount": "950.00",
+        "item_name": "Cited CV Rewrite — Premium",
+        "tier_id": 3,
+    },
+}
+
+TierKey = Literal["diagnostic", "rewrite_basic", "rewrite_premium"]
+
+
+@router.post("/checkout/{tier}")
+async def create_checkout(tier: TierKey, scan_id: str):
+    """
+    Generate a PayFast redirect URL for upgrading a scan.
+
+    The frontend POSTs here, gets back a URL, and redirects the user. PayFast
+    will redirect back to {PUBLIC_BASE_URL}/upgrade/return?scan={scan_id}
+    on success and post an ITN to /api/webhook/payfast for confirmation.
+    """
+    if tier not in TIERS:
+        raise HTTPException(status_code=404, detail="Unknown tier.")
+
+    if not PAYFAST_MERCHANT_ID or not PAYFAST_MERCHANT_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="PayFast is not configured. Set PAYFAST_MERCHANT_ID and PAYFAST_MERCHANT_KEY.",
+        )
+
+    scan = await get_scan(scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found.")
+
+    tier_config = TIERS[tier]
+
+    # PayFast required and recommended fields. The order matters for the
+    # signature calculation below.
+    fields = {
+        "merchant_id": PAYFAST_MERCHANT_ID,
+        "merchant_key": PAYFAST_MERCHANT_KEY,
+        "return_url": f"{PUBLIC_BASE_URL}/upgrade/return?scan={scan_id}",
+        "cancel_url": f"{PUBLIC_BASE_URL}/upgrade/cancel?scan={scan_id}",
+        "notify_url": f"{PUBLIC_BASE_URL}/api/webhook/payfast",
+        "name_first": scan.get("email", "").split("@")[0][:50],
+        "email_address": scan["email"],
+        "m_payment_id": f"{scan_id}:{tier}",   # so we can recover the scan on ITN
+        "amount": tier_config["amount"],
+        "item_name": tier_config["item_name"],
+        "custom_str1": scan_id,
+        "custom_int1": str(tier_config["tier_id"]),
+    }
+
+    fields["signature"] = _payfast_signature(fields, PAYFAST_PASSPHRASE)
+
+    base_url = PROCESS_URL_SANDBOX if PAYFAST_SANDBOX else PROCESS_URL_LIVE
+    redirect_url = f"{base_url}?{urllib.parse.urlencode(fields)}"
+
+    return {"redirect_url": redirect_url}
+
+
+def _payfast_signature(fields: dict, passphrase: str) -> str:
+    """
+    Compute the PayFast MD5 signature.
+
+    Per PayFast spec: alphabetise the keys, URL-encode values with PHP-style
+    encoding (spaces as +), append the passphrase if set, and MD5 the result.
+    """
+    # PayFast uses a specific subset of fields for the signature — exclude any
+    # field whose value is empty.
+    signature_fields = {k: v for k, v in fields.items() if v != "" and k != "signature"}
+    # PayFast expects fields in the order they're sent, but for safety many
+    # implementations alphabetise. The official PHP SDK alphabetises.
+    ordered = sorted(signature_fields.items())
+    payload = "&".join(
+        f"{key}={urllib.parse.quote_plus(str(value))}" for key, value in ordered
+    )
+    if passphrase:
+        payload += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
+    return hashlib.md5(payload.encode("utf-8")).hexdigest()
