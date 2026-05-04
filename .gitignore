@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Replit
+.replit.local
+.upm/
+.config/
+
+# Secrets and local data
+.env
+data/*.db
+data/*.db-journal
+
+# OS
+.DS_Store
+Thumbs.db
