@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cited — Is your CV invisible to ATS systems?</title>
+<meta name="description" content="Free ATS scan for South African job seekers. See exactly how your CV scores against the systems that screen 75% of applications before a human ever reads them.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- Masthead -->
+<header class="masthead">
+  <div class="container masthead-inner">
+    <div class="wordmark">Cited<span class="dot">.</span></div>
+    <div class="masthead-meta">
+      <span>System online · Scans running</span>
+    </div>
+    <a href="#scan" class="nav-cta">Scan my CV</a>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="edition-line">Vol. I · ATS Visibility Report</div>
+        <h1>Most CVs are <em>invisible</em> to the software that screens them.</h1>
+        <p class="hero-lede">Before a recruiter ever sees your CV, an Applicant Tracking System decides whether you're worth reading. Three out of four applications are filtered out at this stage — not because candidates are unqualified, but because their CV is unreadable to a machine. Cited shows you exactly where yours stands.</p>
+        <div class="cta-row">
+          <a href="#scan" class="btn-primary">
+            Scan my CV — free
+            <span class="arrow">→</span>
+          </a>
+          <a href="#how" class="btn-secondary">How it works</a>
+        </div>
+        <div class="hero-fineprint">No signup wall · Results in 60 seconds · Powered by real ATS logic</div>
+      </div>
+
+      <div class="scanner">
+        <div class="scanner-header">
+          <div><span class="live-dot"></span>Live scan</div>
+          <div>REF #7A41-K9</div>
+        </div>
+        <div class="cv-preview">
+          <span class="scan-bar"></span>
+          <span class="cv-line pass">ANDREW M. — SENIOR IT EXECUTIVE</span>
+          <span class="cv-line pass">andrew@example.co.za · +27 31 XXX XXXX</span>
+          <span class="cv-line pass">&nbsp;</span>
+          <span class="cv-line pass">PROFESSIONAL SUMMARY</span>
+          <span class="cv-line flag">⚠ Graphic text box detected — unparseable</span>
+          <span class="cv-line pass">&nbsp;</span>
+          <span class="cv-line pass">EXPERIENCE</span>
+          <span class="cv-line flag">⚠ Multi-column layout — parsing skipped</span>
+          <span class="cv-line pass">Head of IT, International Group (2019–present)</span>
+          <span class="cv-line flag">⚠ Missing keyword: "enterprise architecture"</span>
+          <span class="cv-line flag">⚠ Missing keyword: "stakeholder management"</span>
+          <span class="cv-line pass">Led digital transformation across 14 sites...</span>
+        </div>
+        <div class="score-display">
+          <div class="score-number" id="liveScore">47</div>
+          <div>
+            <div class="score-label">ATS compatibility</div>
+            <div class="score-detail">Flagged: <strong>3 structural errors</strong>, <strong>8 missing keywords</strong>. Estimated rejection rate: <strong>73%</strong>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The Problem -->
+<section class="section">
+  <div class="container">
+    <div class="section-eyebrow">The Situation</div>
+    <h2 class="section-title">The recruiter you're writing for <em>doesn't read first.</em></h2>
+    <p class="section-prose">Applicant Tracking Systems are the quiet gatekeepers of modern hiring. Every major South African employer uses one. They parse your CV into a structured database, score it against keywords from the job ad, and rank you against every other applicant before a human ever looks. Miss the format, miss the keywords, and you miss the shortlist — regardless of experience.</p>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-label">Applications filtered</div>
+        <div class="stat-number">75<span class="unit">%</span></div>
+        <div class="stat-desc">Rejected by ATS systems before a recruiter sees them.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Typical score</div>
+        <div class="stat-number">42<span class="unit">/100</span></div>
+        <div class="stat-desc">Median ATS score for SA job seekers using template CVs.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Average lift</div>
+        <div class="stat-number">+31<span class="unit">pts</span></div>
+        <div class="stat-desc">Score improvement after a full Cited optimisation.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-eyebrow">Method</div>
+    <h2 class="section-title">Three steps. <em>Sixty seconds.</em></h2>
+
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="how-step-number">01</div>
+        <h3 class="how-step-title">Upload your CV</h3>
+        <p class="how-step-desc">PDF or Word. Paste the job description you're applying for — we'll score against it specifically.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-number">02</div>
+        <h3 class="how-step-title">We run the scan</h3>
+        <p class="how-step-desc">Your CV is parsed through the same logic used by Workday, Greenhouse, and Oracle Taleo — the systems most SA employers use.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-number">03</div>
+        <h3 class="how-step-title">Get your score</h3>
+        <p class="how-step-desc">An honest number out of 100, a list of structural errors, and the top keywords you're missing. Free.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-number">04</div>
+        <h3 class="how-step-title">Fix it — or have us fix it</h3>
+        <p class="how-step-desc">Some problems you can fix yourself in an hour. Others need a rewrite. We'll show you which is which.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Upload form (the actual product) -->
+<section class="upload-section" id="scan">
+  <div class="container upload-inner">
+    <div>
+      <h2>Find out what your CV actually <em>scores.</em></h2>
+      <p>Upload a PDF or Word version of your CV. If you have a specific job ad you're applying for, paste it in — we'll score against those keywords specifically. Results in about a minute, no signup wall, copy emailed to you.</p>
+      <p style="margin-top: 24px; font-size: 13px; opacity: 0.7;">Your CV is processed once and stored encrypted for 30 days so you can retrieve or upgrade your report. After 30 days it's permanently deleted.</p>
+    </div>
+
+    <div>
+      <form class="upload-form" id="scanForm" enctype="multipart/form-data">
+        <div class="form-error" id="formError"></div>
+
+        <div class="field">
+          <label for="cv">CV file (PDF or Word)</label>
+          <input type="file" id="cv" name="cv" accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+        </div>
+
+        <div class="field">
+          <label for="job_description">Job ad (optional — improves keyword scoring)</label>
+          <textarea id="job_description" name="job_description" placeholder="Paste the job description here…"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="region">Region</label>
+          <select id="region" name="region">
+            <option value="auto">Auto-detect</option>
+            <option value="ZA">South Africa</option>
+            <option value="UK">United Kingdom</option>
+            <option value="US">United States</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="email">Email (where to send the report)</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+
+        <label class="consent">
+          <input type="checkbox" name="consent" required>
+          <span>I'm OK with Cited storing my CV for 30 days so I can retrieve or upgrade my report, and with receiving the occasional Cited update by email. I can unsubscribe at any time.</span>
+        </label>
+
+        <button type="submit" id="scanSubmit">Scan my CV — free</button>
+      </form>
+
+      <div class="result-panel" id="resultPanel"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tiers -->
+<section class="section tiers">
+  <div class="container">
+    <div class="section-eyebrow">Services</div>
+    <h2 class="section-title">Pick your level of <em>help.</em></h2>
+    <p class="section-prose">Start with the free scan. If you want more detail, upgrade to the full diagnostic report. If you want us to do the work, the rewrite service is waiting.</p>
+
+    <div class="tiers-grid">
+      <div class="tier">
+        <div class="tier-number">Tier One</div>
+        <div class="tier-name">Free ATS Scan</div>
+        <div class="tier-price free">Free</div>
+        <div class="tier-turnaround">Instant · 60 seconds</div>
+        <div class="tier-rule"></div>
+        <ul class="tier-features">
+          <li>ATS compatibility score (0–100)</li>
+          <li>Top 3 structural errors flagged</li>
+          <li>Top 5 missing keywords</li>
+          <li>One-page summary by email</li>
+        </ul>
+        <a href="#scan" class="tier-cta">Start free scan</a>
+      </div>
+
+      <div class="tier featured">
+        <div class="tier-number">Tier Two · Most chosen</div>
+        <div class="tier-name">Full Diagnostic Report</div>
+        <div class="tier-price"><span class="currency">R</span>99</div>
+        <div class="tier-turnaround">Instant · Delivered to inbox</div>
+        <div class="tier-rule"></div>
+        <ul class="tier-features">
+          <li>Everything in the free scan</li>
+          <li>Line-by-line error annotations</li>
+          <li>Complete keyword gap analysis</li>
+          <li>Before/after score projection</li>
+          <li>DIY fix guide with examples</li>
+          <li>Region-tuned for ZA · UK · US ATS</li>
+        </ul>
+        <a href="#scan" class="tier-cta">Scan first, then upgrade</a>
+      </div>
+
+      <div class="tier">
+        <div class="tier-number">Tier Three</div>
+        <div class="tier-name">Full CV Rewrite</div>
+        <div class="tier-price"><span class="currency">from R</span>450</div>
+        <div class="tier-turnaround">3–5 business days</div>
+        <div class="tier-rule"></div>
+        <ul class="tier-features">
+          <li>Complete rewrite in ATS-safe template</li>
+          <li>Keyword integration from job ad</li>
+          <li>Before/after score comparison</li>
+          <li>Tailored summary + bullet points</li>
+          <li>One round of revisions included</li>
+          <li>Delivered as .docx and .pdf</li>
+        </ul>
+        <a href="#scan" class="tier-cta">Scan first, then book</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section">
+  <div class="container">
+    <div class="section-eyebrow">Questions</div>
+    <h2 class="section-title" style="text-align: center; margin-left: auto; margin-right: auto;">Frequently asked.</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <div class="faq-q">Is the free scan really free? What's the catch? <span class="marker">+</span></div>
+        <div class="faq-a">Genuinely free. No credit card, no hidden tier. We run your CV through the same parsing engine we use for paid reports and send you the top-level results. The business model is that a meaningful percentage of people want more detail than the free scan gives, and they upgrade. Most don't, and that's fine.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">How accurate is your scoring? <span class="marker">+</span></div>
+        <div class="faq-a">Our engine models the logic used by the major ATS platforms — Workday, Greenhouse, Oracle Taleo, iCIMS — which together account for around 80% of mid-to-large employer deployments globally. No tool can exactly replicate a specific employer's configuration, but the structural issues we flag (text boxes, tables, headers, column layouts) cause parsing failures across virtually every modern ATS.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Does this work for UK and US job markets too? <span class="marker">+</span></div>
+        <div class="faq-a">Yes. The R99 Full Diagnostic Report includes region tuning for South Africa, the United Kingdom, and the United States. ATS systems themselves are broadly the same worldwide, but keyword conventions and CV formatting expectations differ by region. We automatically detect the target region from your job description or let you specify it.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Who's behind Cited? <span class="marker">+</span></div>
+        <div class="faq-a">Cited is a small South African team working on CV optimisation and ATS research. We deliberately don't front the service with an individual name — the scoring engine, the templates, and the research are what matter to you. Contracts and invoices carry a registered entity; feel free to ask if you need that detail before engaging the rewrite service.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What happens to my CV data? <span class="marker">+</span></div>
+        <div class="faq-a">Your CV is processed to generate your score and report, then stored encrypted for 30 days so you can retrieve or upgrade your report within that window. After 30 days it's permanently deleted. We never share CVs with third parties, never train AI models on them, and never sell contact data. The full policy is on our POPIA page.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Can I get a refund on the rewrite? <span class="marker">+</span></div>
+        <div class="faq-a">If your rewritten CV doesn't score at least 20 points higher than your original on our scan, we'll refund the rewrite in full. In practice this has never happened — average lifts are +31 points — but the guarantee is real and in the contract.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container footer-inner">
+    <div>© 2026 Cited · Durban, ZA</div>
+    <div>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/popia">POPIA</a>
+      <a href="mailto:hello@cited.co.za">hello@cited.co.za</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
