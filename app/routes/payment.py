@@ -75,14 +75,22 @@ async def create_checkout(tier: TierKey, scan_id: str):
     tier_config = TIERS[tier]
 
     # PayFast required and recommended fields. The order matters for the
-    # signature calculation below.
+    # signature calculation below — PayFast expects fields in the order
+    # they're sent in the URL/POST, not alphabetical.
+    #
+    # name_first must be alphanumeric-ish only. Email local parts often
+    # contain dots, plus signs, and digits — strip those, fall back to
+    # "Customer" if nothing usable remains.
+    raw_name = scan.get("email", "").split("@")[0]
+    safe_name = "".join(c for c in raw_name if c.isalpha())[:50] or "Customer"
+
     fields = {
         "merchant_id": PAYFAST_MERCHANT_ID,
         "merchant_key": PAYFAST_MERCHANT_KEY,
         "return_url": f"{PUBLIC_BASE_URL}/upgrade/return?scan={scan_id}",
         "cancel_url": f"{PUBLIC_BASE_URL}/upgrade/cancel?scan={scan_id}",
         "notify_url": f"{PUBLIC_BASE_URL}/api/webhook/payfast",
-        "name_first": scan.get("email", "").split("@")[0][:50],
+        "name_first": safe_name,
         "email_address": scan["email"],
         "m_payment_id": f"{scan_id}:{tier}",   # so we can recover the scan on ITN
         "amount": tier_config["amount"],
@@ -103,18 +111,22 @@ def _payfast_signature(fields: dict, passphrase: str) -> str:
     """
     Compute the PayFast MD5 signature.
 
-    Per PayFast spec: alphabetise the keys, URL-encode values with PHP-style
-    encoding (spaces as +), append the passphrase if set, and MD5 the result.
+    PayFast spec (developers.payfast.co.za/docs#step_2_signature, yellow box):
+    fields must be in the order they are sent in the POST/URL, NOT alphabetical.
+    Python dicts preserve insertion order since 3.7 so we just iterate.
+
+    Empty values are excluded. Signature itself is excluded. Values are
+    URL-encoded with PHP-style encoding (spaces as +). Passphrase, if set,
+    appended at the end as &passphrase=...
     """
-    # PayFast uses a specific subset of fields for the signature — exclude any
-    # field whose value is empty.
-    signature_fields = {k: v for k, v in fields.items() if v != "" and k != "signature"}
-    # PayFast expects fields in the order they're sent, but for safety many
-    # implementations alphabetise. The official PHP SDK alphabetises.
-    ordered = sorted(signature_fields.items())
-    payload = "&".join(
-        f"{key}={urllib.parse.quote_plus(str(value))}" for key, value in ordered
-    )
+    payload_parts = []
+    for key, value in fields.items():
+        if key == "signature":
+            continue
+        if value == "" or value is None:
+            continue
+        payload_parts.append(f"{key}={urllib.parse.quote_plus(str(value))}")
+    payload = "&".join(payload_parts)
     if passphrase:
         payload += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     return hashlib.md5(payload.encode("utf-8")).hexdigest()
