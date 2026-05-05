@@ -53,11 +53,13 @@ TierKey = Literal["diagnostic", "rewrite_basic", "rewrite_premium"]
 @router.post("/checkout/{tier}")
 async def create_checkout(tier: TierKey, scan_id: str):
     """
-    Generate a PayFast redirect URL for upgrading a scan.
+    Generate PayFast checkout payload for upgrading a scan.
 
-    The frontend POSTs here, gets back a URL, and redirects the user. PayFast
-    will redirect back to {PUBLIC_BASE_URL}/upgrade/return?scan={scan_id}
-    on success and post an ITN to /api/webhook/payfast for confirmation.
+    Returns the form fields and the action URL — the frontend then submits
+    a hidden HTML form via POST. PayFast strongly prefers POST over GET
+    redirects (the sandbox can reject GET with a 400). PayFast will redirect
+    back to {PUBLIC_BASE_URL}/upgrade/return?scan={scan_id} on success and
+    post an ITN to /api/webhook/payfast for confirmation.
     """
     if tier not in TIERS:
         raise HTTPException(status_code=404, detail="Unknown tier.")
@@ -101,10 +103,12 @@ async def create_checkout(tier: TierKey, scan_id: str):
 
     fields["signature"] = _payfast_signature(fields, PAYFAST_PASSPHRASE)
 
-    base_url = PROCESS_URL_SANDBOX if PAYFAST_SANDBOX else PROCESS_URL_LIVE
-    redirect_url = f"{base_url}?{urllib.parse.urlencode(fields)}"
+    action_url = PROCESS_URL_SANDBOX if PAYFAST_SANDBOX else PROCESS_URL_LIVE
 
-    return {"redirect_url": redirect_url}
+    return {
+        "action_url": action_url,
+        "fields": fields,
+    }
 
 
 def _payfast_signature(fields: dict, passphrase: str) -> str:

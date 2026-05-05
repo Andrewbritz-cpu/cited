@@ -125,11 +125,26 @@ document.querySelectorAll('.upgrade-btn').forEach(btn => {
 
       const data = await response.json();
 
-      // Show the loading overlay while the browser navigates
+      // Show the loading overlay while the browser submits the form
       document.getElementById('payfastLoading').style.display = 'flex';
 
-      // Redirect to PayFast
-      window.location.href = data.redirect_url;
+      // PayFast prefers POSTed forms over GET redirects. Build a hidden
+      // form, populate it with the fields from the API, and submit.
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = data.action_url;
+      form.style.display = 'none';
+
+      for (const [name, value] of Object.entries(data.fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
     } catch (err) {
       btn.disabled = false;
       btn.textContent = btn.dataset.tier === 'diagnostic'
