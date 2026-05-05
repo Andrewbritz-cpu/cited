@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Payment received — Cited{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding: 80px 0;">
+  <div class="container" style="max-width: 800px; text-align: center;">
+
+    {% if tier >= 3 %}
+      <!-- Tier 3 confirmed (rewrite) -->
+      <div class="edition-line" style="justify-content: center;">Vol. I  ·  Payment Confirmed</div>
+      <h1 style="text-align: center;">
+        Thank you. <em>Your rewrite is on the way.</em>
+      </h1>
+      <p class="hero-lede" style="margin: 0 auto 40px; font-style: normal; max-width: 580px;">
+        Payment received. The next step is a quick intake form so the rewrite
+        team has the context to do this properly.
+      </p>
+      <a href="/upgrade?scan={{ scan_id }}" class="btn-primary">
+        Continue to intake form
+        <span class="arrow">→</span>
+      </a>
+
+    {% elif tier == 2 %}
+      <!-- Tier 2 confirmed (diagnostic report) -->
+      <div class="edition-line" style="justify-content: center;">Vol. I  ·  Payment Confirmed</div>
+      <h1 style="text-align: center;">
+        Thank you. <em>Your full report is unlocked.</em>
+      </h1>
+      <p class="hero-lede" style="margin: 0 auto 40px; font-style: normal; max-width: 580px;">
+        Payment received. Your detailed diagnostic report is now available —
+        every issue, full keyword analysis, region-tuned fix guide. Available
+        for 30 days.
+      </p>
+      <a href="/upgrade/report?scan={{ scan_id }}" class="btn-primary">
+        View my full report
+        <span class="arrow">→</span>
+      </a>
+
+    {% else %}
+      <!-- Tier still 1 — the ITN hasn't arrived yet, poll until it does -->
+      <div class="edition-line" style="justify-content: center;">Vol. I  ·  Confirming Payment</div>
+      <h1 style="text-align: center;">
+        Confirming your payment...
+      </h1>
+      <p class="hero-lede" style="margin: 0 auto 40px; font-style: normal; max-width: 580px;">
+        PayFast confirmed the payment. We're waiting for the secure
+        notification to arrive so we can unlock your tier. Usually takes
+        under 10 seconds — this page will refresh automatically.
+      </p>
+
+      <div id="pollingIndicator" style="font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted);">
+        <span class="dot" style="display: inline-block; width: 8px; height: 8px; background: var(--oxblood); border-radius: 50%; margin-right: 8px; animation: pulse 1s ease-in-out infinite;"></span>
+        Checking…
+      </div>
+
+      <div id="timeoutWarning" style="display: none; max-width: 580px; margin: 40px auto 0; padding: 20px; background: var(--paper-dark); border-left: 3px solid var(--oxblood); text-align: left; font-size: 14px; line-height: 1.5;">
+        <strong>Taking longer than usual.</strong> If this persists, your payment
+        is still safe — PayFast's confirmation will arrive eventually and unlock
+        your tier. You can also check back later using your scan link, or
+        <a href="mailto:hello@cited.co.za?subject=Payment%20Status%20Check%20-%20{{ scan_id }}">email us</a>
+        with your scan ID: <code style="font-family: var(--mono); background: var(--paper); padding: 2px 6px;">{{ scan_id }}</code>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+{% if tier < 2 %}
+<script>
+// Poll the scan endpoint every 3 seconds until the tier upgrades.
+// PayFast's ITN should arrive within 5-15 seconds of the user's redirect.
+const scanId = "{{ scan_id }}";
+let pollAttempts = 0;
+const maxAttempts = 20;  // 60 seconds total
+
+const pollInterval = setInterval(async () => {
+  pollAttempts++;
+
+  try {
+    const response = await fetch(`/api/scan/${scanId}`);
+    if (!response.ok) {
+      throw new Error('Scan not found');
+    }
+    const data = await response.json();
+
+    if (data.tier >= 2) {
+      // Tier upgraded! Reload the page to show the appropriate success state.
+      clearInterval(pollInterval);
+      window.location.reload();
+      return;
+    }
+  } catch (err) {
+    console.error('Poll error:', err);
+  }
+
+  if (pollAttempts >= maxAttempts) {
+    clearInterval(pollInterval);
+    document.getElementById('pollingIndicator').style.display = 'none';
+    document.getElementById('timeoutWarning').style.display = 'block';
+  }
+}, 3000);
+</script>
+{% endif %}
+{% endblock %}

@@ -618,8 +618,15 @@ body::before {
   gap: 10px;
   font-size: 12px;
   color: var(--ink-soft);
-  margin: 16px 0 24px;
+  margin: 12px 0 0;
   line-height: 1.45;
+}
+.upload-form .consent + .consent { margin-top: 12px; }
+.upload-form .consent:last-of-type { margin-bottom: 24px; }
+.upload-form .consent em {
+  font-style: italic;
+  color: var(--ink-muted);
+  font-size: 11px;
 }
 .upload-form .consent input { margin-top: 3px; flex-shrink: 0; }
 .upload-form button {

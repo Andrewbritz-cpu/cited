@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Unsubscribe — Cited{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding: 80px 0;">
+  <div class="container" style="max-width: 600px; text-align: center;">
+    <div class="edition-line" style="justify-content: center;">Vol. I  ·  Unsubscribe</div>
+
+    {% if status == "done" %}
+      <h1 style="text-align: center;">
+        You're <em>unsubscribed.</em>
+      </h1>
+      <p class="hero-lede" style="margin: 0 auto 20px; font-style: normal;">
+        We've removed <strong>{{ email }}</strong> from our marketing list.
+        It can take up to 24 hours for any already-queued emails to stop.
+      </p>
+      <p style="font-family: var(--serif); font-size: 15px; color: var(--ink-soft); margin-bottom: 32px;">
+        Sorry to see you go. If there was something specific that didn't
+        work for you, we'd genuinely like to hear it —
+        <a href="mailto:hello@cited.co.za" style="color: var(--oxblood);">hello@cited.co.za</a>.
+      </p>
+      <a href="/" class="btn-primary">Back to home <span class="arrow">→</span></a>
+
+    {% elif status == "not_found" %}
+      <h1 style="text-align: center;">
+        We couldn't find <em>that email.</em>
+      </h1>
+      <p class="hero-lede" style="margin: 0 auto 32px; font-style: normal;">
+        Either you're already unsubscribed, or the email isn't on our list.
+        Either way — you won't hear from us. If you'd like to double-check,
+        email <a href="mailto:hello@cited.co.za" style="color: var(--oxblood);">hello@cited.co.za</a>.
+      </p>
+      <a href="/" class="btn-primary">Back to home <span class="arrow">→</span></a>
+
+    {% else %}
+      <h1 style="text-align: center;">
+        Unsubscribe from <em>marketing emails.</em>
+      </h1>
+      <p class="hero-lede" style="margin: 0 auto 32px; font-style: normal;">
+        Enter the email address you want to unsubscribe. We don't send
+        marketing emails currently, but if you're on the list this will
+        keep it that way.
+      </p>
+
+      <form method="post" action="/unsubscribe" style="max-width: 420px; margin: 0 auto;">
+        <div style="margin-bottom: 16px;">
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="you@example.com"
+            value="{{ email or '' }}"
+            style="width: 100%; padding: 14px 16px; font-family: var(--sans); font-size: 15px; border: 1px solid var(--ink); background: var(--paper);"
+          >
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; border: none; cursor: pointer;">
+          Unsubscribe
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

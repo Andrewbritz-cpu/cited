@@ -13,11 +13,11 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from app.routes import scan, payment, webhook
+from app.routes import scan, payment, webhook, upgrade, pages
 from app.db import init_db
+from app.templating import templates
 
 load_dotenv()
 
@@ -46,13 +46,14 @@ app.mount(
     name="static",
 )
 
-# Jinja templates
-templates = Jinja2Templates(directory=BASE_DIR / "templates")
-
-# API routers
+# API routers — order doesn't matter, FastAPI handles routing.
 app.include_router(scan.router, prefix="/api/scan", tags=["scan"])
 app.include_router(payment.router, prefix="/api/payment", tags=["payment"])
 app.include_router(webhook.router, prefix="/api/webhook", tags=["webhook"])
+
+# Page routers (HTML responses, not JSON APIs)
+app.include_router(upgrade.router, tags=["upgrade"])
+app.include_router(pages.router, tags=["pages"])
 
 
 @app.get("/", response_class=HTMLResponse)

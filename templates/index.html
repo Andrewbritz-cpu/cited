@@ -1,29 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cited — Is your CV invisible to ATS systems?</title>
-<meta name="description" content="Free ATS scan for South African job seekers. See exactly how your CV scores against the systems that screen 75% of applications before a human ever reads them.">
+{% extends "base.html" %}
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+{% block title %}Cited — Is your CV invisible to ATS systems?{% endblock %}
 
-<link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-
-<!-- Masthead -->
-<header class="masthead">
-  <div class="container masthead-inner">
-    <div class="wordmark">Cited<span class="dot">.</span></div>
-    <div class="masthead-meta">
-      <span>System online · Scans running</span>
-    </div>
-    <a href="#scan" class="nav-cta">Scan my CV</a>
-  </div>
-</header>
+{% block content %}
 
 <!-- Hero -->
 <section class="hero">
@@ -138,7 +117,7 @@
   <div class="container upload-inner">
     <div>
       <h2>Find out what your CV actually <em>scores.</em></h2>
-      <p>Upload a PDF or Word version of your CV. If you have a specific job ad you're applying for, paste it in — we'll score against those keywords specifically. Results in about a minute, no signup wall, copy emailed to you.</p>
+      <p>Upload a PDF or Word version of your CV. If you have a specific job ad you're applying for, paste it in — we'll score against those keywords specifically. Results in about a minute, no signup wall, no spam.</p>
       <p style="margin-top: 24px; font-size: 13px; opacity: 0.7;">Your CV is processed once and stored encrypted for 30 days so you can retrieve or upgrade your report. After 30 days it's permanently deleted.</p>
     </div>
 
@@ -167,13 +146,18 @@
         </div>
 
         <div class="field">
-          <label for="email">Email (where to send the report)</label>
+          <label for="email">Email (so you can retrieve your scan later)</label>
           <input type="email" id="email" name="email" placeholder="you@example.com" required>
         </div>
 
         <label class="consent">
-          <input type="checkbox" name="consent" required>
-          <span>I'm OK with Cited storing my CV for 30 days so I can retrieve or upgrade my report, and with receiving the occasional Cited update by email. I can unsubscribe at any time.</span>
+          <input type="checkbox" name="storage_consent" required>
+          <span>I'm OK with Cited storing my CV for 30 days so I can retrieve or upgrade my report. After 30 days it's permanently deleted. <em>(Required to use the scanner.)</em></span>
+        </label>
+
+        <label class="consent">
+          <input type="checkbox" name="marketing_consent" value="true">
+          <span>Email me CV tips and tool updates from Cited. About one email per month, no spam. Unsubscribe anytime in one click. <em>(Optional. Untick if you'd rather not.)</em></span>
         </label>
 
         <button type="submit" id="scanSubmit">Scan my CV — free</button>
@@ -285,19 +269,10 @@
   </div>
 </section>
 
-<!-- Footer -->
-<footer>
-  <div class="container footer-inner">
-    <div>© 2026 Cited · Durban, ZA</div>
-    <div>
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
-      <a href="/popia">POPIA</a>
-      <a href="mailto:hello@cited.co.za">hello@cited.co.za</a>
-    </div>
-  </div>
-</footer>
+<!-- Footer is provided by base.html -->
 
+{% endblock %}
+
+{% block scripts %}
 <script src="/static/app.js"></script>
-</body>
-</html>
+{% endblock %}

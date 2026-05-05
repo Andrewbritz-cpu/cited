@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Your Full Diagnostic Report — Cited{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding-bottom: 60px;">
+  <div class="container">
+    <div class="edition-line">Vol. I · Full Diagnostic Report  ·  Tier Two Unlocked</div>
+    <h1 style="max-width: 900px;">
+      Your full <em>diagnostic report.</em>
+    </h1>
+    <p class="hero-lede" style="max-width: 720px;">
+      Below is everything the scoring engine found in your CV. Each issue
+      includes severity, the points it cost you, and what to change.
+      Bookmark this page — your report stays available for 30 days.
+    </p>
+  </div>
+</section>
+
+<!-- Score breakdown -->
+<section class="section" style="padding-top: 40px; padding-bottom: 60px;">
+  <div class="container">
+    <div class="section-eyebrow">Score Breakdown</div>
+    <h2 class="section-title">
+      <span style="color: var(--oxblood); font-weight: 900;">{{ scan.score }}</span><span style="font-weight: 400; color: var(--ink-muted);">/100</span>
+    </h2>
+
+    {% set bd = result.score_breakdown %}
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); margin-bottom: 48px;">
+
+      <div style="padding: 32px 24px; border-right: 1px solid var(--ink);">
+        <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">Parseability</div>
+        <div style="font-family: var(--serif); font-weight: 900; font-size: 56px; line-height: 1; color: var(--oxblood); font-variation-settings: 'opsz' 144;">
+          {{ bd.parseability }}<span style="font-size: 20px; color: var(--ink); font-weight: 500;">/{{ bd.parseability_max }}</span>
+        </div>
+        <div style="font-family: var(--serif); font-size: 14px; color: var(--ink-soft); margin-top: 12px; font-variation-settings: 'opsz' 24;">
+          Can ATS parsers read your file?
+        </div>
+      </div>
+
+      <div style="padding: 32px 24px; border-right: 1px solid var(--ink);">
+        <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">Structure</div>
+        <div style="font-family: var(--serif); font-weight: 900; font-size: 56px; line-height: 1; color: var(--oxblood); font-variation-settings: 'opsz' 144;">
+          {{ bd.structure }}<span style="font-size: 20px; color: var(--ink); font-weight: 500;">/{{ bd.structure_max }}</span>
+        </div>
+        <div style="font-family: var(--serif); font-size: 14px; color: var(--ink-soft); margin-top: 12px; font-variation-settings: 'opsz' 24;">
+          Sections, contact details, dates.
+        </div>
+      </div>
+
+      <div style="padding: 32px 24px; border-right: 1px solid var(--ink);">
+        <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">Keywords</div>
+        <div style="font-family: var(--serif); font-weight: 900; font-size: 56px; line-height: 1; color: var(--oxblood); font-variation-settings: 'opsz' 144;">
+          {{ bd.keywords }}<span style="font-size: 20px; color: var(--ink); font-weight: 500;">/{{ bd.keywords_max }}</span>
+        </div>
+        <div style="font-family: var(--serif); font-size: 14px; color: var(--ink-soft); margin-top: 12px; font-variation-settings: 'opsz' 24;">
+          Match against {{ bd.keyword_source }}.
+        </div>
+      </div>
+
+      <div style="padding: 32px 24px;">
+        <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">Content</div>
+        <div style="font-family: var(--serif); font-weight: 900; font-size: 56px; line-height: 1; color: var(--oxblood); font-variation-settings: 'opsz' 144;">
+          {{ bd.content }}<span style="font-size: 20px; color: var(--ink); font-weight: 500;">/{{ bd.content_max }}</span>
+        </div>
+        <div style="font-family: var(--serif); font-size: 14px; color: var(--ink-soft); margin-top: 12px; font-variation-settings: 'opsz' 24;">
+          Bullets, action verbs, numbers.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Every structural issue -->
+<section class="section" style="padding: 40px 0 60px;">
+  <div class="container">
+    <div class="section-eyebrow">All Issues Detected</div>
+    <h2 class="section-title">Every problem, ranked by <em>severity.</em></h2>
+
+    {% if result.structural_issues %}
+    <div style="max-width: 900px;">
+      {% for issue in result.structural_issues %}
+      <div style="border-top: 1px solid var(--ink); padding: 24px 0;">
+        <div style="display: flex; justify-content: space-between; gap: 24px; align-items: baseline; margin-bottom: 8px;">
+          <div style="font-family: var(--serif); font-weight: 500; font-size: 22px; line-height: 1.3; letter-spacing: -0.01em; font-variation-settings: 'opsz' 48;">
+            {{ issue.type.replace('_', ' ').title() }}
+          </div>
+          <div style="display: flex; gap: 12px; align-items: baseline; flex-shrink: 0;">
+            <span style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px;
+              {% if issue.severity == 'critical' %}background: var(--oxblood); color: var(--paper);{% endif %}
+              {% if issue.severity == 'high' %}background: rgba(122,31,31,0.15); color: var(--oxblood);{% endif %}
+              {% if issue.severity == 'medium' %}background: var(--paper-dark); color: var(--ink);{% endif %}
+              {% if issue.severity == 'low' %}background: transparent; color: var(--ink-muted); border: 1px solid var(--ink-muted);{% endif %}
+            ">
+              {{ issue.severity }}
+            </span>
+            <span style="font-family: var(--mono); font-size: 13px; color: var(--oxblood); font-weight: 700;">
+              −{{ issue.penalty }} pts
+            </span>
+          </div>
+        </div>
+        <p style="font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink-soft); font-variation-settings: 'opsz' 24;">
+          {{ issue.description }}
+        </p>
+      </div>
+      {% endfor %}
+      <div style="border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 16px 0; margin-top: 0; font-family: var(--mono); font-size: 12px; color: var(--ink-muted); text-align: right;">
+        Total deductions: −{{ result.structural_issues | sum(attribute='penalty') }} points
+      </div>
+    </div>
+    {% else %}
+    <p class="section-prose">
+      No structural issues detected — your CV passed every parseability and
+      structure check. That's rare. Well done.
+    </p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Keyword analysis -->
+<section class="section tiers" style="padding: 60px 0;">
+  <div class="container">
+    <div class="section-eyebrow">Keyword Analysis</div>
+    <h2 class="section-title">What your CV says — and <em>doesn't say.</em></h2>
+
+    <p class="section-prose" style="margin-bottom: 32px;">
+      Comparison source: <strong>{{ bd.keyword_source }}</strong>.
+      Below: the keywords your CV matched, and the ones it's missing.
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 900px;">
+
+      <div style="background: var(--paper); border: 1px solid var(--ink); padding: 24px;">
+        <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage); margin-bottom: 16px;">
+          ✓ Matched ({{ bd.matched_keywords | length }})
+        </div>
+        {% if bd.matched_keywords %}
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {% for kw in bd.matched_keywords %}
+          <li style="padding: 8px 0; border-bottom: 1px solid var(--paper-dark); font-size: 14px; line-height: 1.4;">
+            <span style="color: var(--sage); margin-right: 8px;">✓</span>{{ kw }}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p style="font-family: var(--serif); color: var(--ink-soft); font-size: 14px;">
+          No matching keywords detected. This is unusual — it usually means
+          either no job ad was provided <em>and</em> the CV doesn't match
+          standard industry baselines, or the keyword source is too generic.
+        </p>
+        {% endif %}
+      </div>
+
+      <div style="background: var(--ink); color: var(--paper); padding: 24px;">
+        <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #FF9999; margin-bottom: 16px;">
+          ✗ Missing ({{ result.missing_keywords | length }})
+        </div>
+        {% if result.missing_keywords %}
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {% for kw in result.missing_keywords %}
+          <li style="padding: 8px 0; border-bottom: 1px solid rgba(245,241,234,0.15); font-size: 14px; line-height: 1.4;">
+            <span style="color: #FF9999; margin-right: 8px;">✗</span>{{ kw }}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p style="font-family: var(--serif); font-size: 14px; opacity: 0.85;">
+          No major keyword gaps detected.
+        </p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Fix guide -->
+<section class="section" style="padding: 60px 0;">
+  <div class="container">
+    <div class="section-eyebrow">DIY Fix Guide</div>
+    <h2 class="section-title">What to <em>change.</em></h2>
+
+    <div style="max-width: 800px; font-family: var(--serif); font-size: 17px; line-height: 1.6; color: var(--ink-soft); font-variation-settings: 'opsz' 24;">
+
+      {% if bd.parseability < bd.parseability_max %}
+      <h3 style="font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 32px 0 12px; color: var(--ink); font-variation-settings: 'opsz' 48;">
+        1. Fix the parsing issues first
+      </h3>
+      <p style="margin-bottom: 16px;">
+        These are the highest-impact fixes. ATS parsers fail before they ever
+        get to your content if the file format itself is breaking. Common
+        fixes: remove text boxes and convert their content to body text;
+        replace tables with bulleted lists; use a single-column layout;
+        export from Word as plain PDF rather than image-flattened.
+      </p>
+      {% endif %}
+
+      {% if bd.structure < bd.structure_max %}
+      <h3 style="font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 32px 0 12px; color: var(--ink); font-variation-settings: 'opsz' 48;">
+        2. Fix the structure
+      </h3>
+      <p style="margin-bottom: 16px;">
+        Use clear section headers — exactly the words "Experience", "Education",
+        and "Skills". Put your contact details (email and phone) in the body
+        of the document, not in the header/footer area, where ATS systems
+        often skip. Make sure each role has start and end years
+        ({{ scan.region }} convention: full year for both).
+      </p>
+      {% endif %}
+
+      {% if bd.keywords < bd.keywords_max and result.missing_keywords %}
+      <h3 style="font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 32px 0 12px; color: var(--ink); font-variation-settings: 'opsz' 48;">
+        3. Integrate missing keywords
+      </h3>
+      <p style="margin-bottom: 16px;">
+        Don't just paste them in — that makes the CV read poorly to humans.
+        Instead, find places in your existing experience where you legitimately
+        used these skills, and rephrase your bullets to include the term.
+        Example: "Managed projects" → "Led cross-functional projects through
+        agile methodology, coordinating with stakeholders across engineering and
+        finance" (uses "agile methodology" and "stakeholders" naturally).
+      </p>
+      {% endif %}
+
+      {% if bd.content < bd.content_max %}
+      <h3 style="font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 32px 0 12px; color: var(--ink); font-variation-settings: 'opsz' 48;">
+        4. Strengthen the writing
+      </h3>
+      <p style="margin-bottom: 16px;">
+        Lead each bullet with a strong action verb (Led, Managed, Drove,
+        Delivered, Implemented). Add at least one quantified achievement per
+        role: percentages, currency amounts, headcounts, time savings —
+        anything that converts "I did X" to "I did X, with this measurable
+        result". Drop the personal pronouns; CVs conventionally start
+        bullets with the verb directly.
+      </p>
+      {% endif %}
+
+      <h3 style="font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 32px 0 12px; color: var(--ink); font-variation-settings: 'opsz' 48;">
+        Projected score after fixes
+      </h3>
+      <p style="margin-bottom: 16px;">
+        If you address every issue above, your score should land between
+        <strong>{{ scan.score + 8 }}</strong> and <strong>{{ scan.score + 18 }}</strong>
+        out of 100 — depending on how thoroughly you implement each fix. The
+        average lift across CVs we've scanned is +12 points for DIY fixes.
+      </p>
+
+    </div>
+  </div>
+</section>
+
+<!-- Closing CTA: rewrite upsell -->
+<section class="closing">
+  <div class="container closing-inner">
+    <h2>Don't have time to do it yourself?</h2>
+    <p>
+      We can rebuild your CV for you in 3–5 days. Tier 3 is the same
+      diagnostic engine plus a human writer using ATS-safe templates and your
+      target job ad's keywords. R450 standard, R950 premium.
+    </p>
+    <a href="/upgrade?scan={{ scan_id }}" class="btn-primary">
+      Book a rewrite
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+{% endblock %}

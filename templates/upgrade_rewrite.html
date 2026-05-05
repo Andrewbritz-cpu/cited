@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Rewrite Intake — Cited{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding-bottom: 60px;">
+  <div class="container">
+    <div class="edition-line">Vol. I · Tier Three  ·  Rewrite Intake</div>
+    <h1 style="max-width: 900px;">
+      Tell us what you want — we'll <em>build it.</em>
+    </h1>
+    <p class="hero-lede" style="max-width: 720px;">
+      Payment confirmed. Now we need a little context so the rewrite hits the
+      target. The fields below take about 5 minutes. We'll be in touch within
+      24 hours, and your finished CV will be in your inbox in 3–5 business
+      days. <a href="/upgrade/report?scan={{ scan_id }}" style="color: var(--oxblood);">View your diagnostic report →</a>
+    </p>
+  </div>
+</section>
+
+<section class="section" style="padding: 40px 0 80px;">
+  <div class="container">
+    <form id="rewriteForm" style="max-width: 720px; background: var(--paper); border: 1px solid var(--ink); padding: 40px; box-shadow: 8px 8px 0 var(--oxblood);">
+
+      <input type="hidden" name="scan_id" value="{{ scan_id }}">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div>
+          <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+            Target role
+          </label>
+          <input type="text" name="target_role" required placeholder="e.g. Senior IT Executive"
+                 style="width: 100%; padding: 12px 14px; font-family: var(--sans); font-size: 15px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink);">
+        </div>
+
+        <div>
+          <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+            Target industry
+          </label>
+          <input type="text" name="target_industry" placeholder="e.g. Financial services"
+                 style="width: 100%; padding: 12px 14px; font-family: var(--sans); font-size: 15px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink);">
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+          Years of experience
+        </label>
+        <select name="years_experience" required
+                style="width: 100%; padding: 12px 14px; font-family: var(--sans); font-size: 15px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink);">
+          <option value="">Choose…</option>
+          <option>0–2 years (entry / early career)</option>
+          <option>3–5 years</option>
+          <option>6–10 years</option>
+          <option>11–15 years</option>
+          <option>16–20 years</option>
+          <option>20+ years (senior executive)</option>
+        </select>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+          Key achievements (3–5 bullets, with numbers where you can)
+        </label>
+        <textarea name="key_achievements" required rows="6" placeholder="e.g.
+- Led R50M digital transformation across 14 sites
+- Built and led team of 12 cross-functional engineers
+- Reduced operational costs by 23% over 18 months"
+                  style="width: 100%; padding: 12px 14px; font-family: var(--mono); font-size: 13px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); resize: vertical;"></textarea>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+          Preferred style
+        </label>
+        <select name="preferred_style"
+                style="width: 100%; padding: 12px 14px; font-family: var(--sans); font-size: 15px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink);">
+          <option value="modern">Modern (clean, minimal — most ATS-friendly)</option>
+          <option value="traditional">Traditional (conventional, formal)</option>
+          <option value="executive">Executive (senior leadership emphasis)</option>
+          <option value="technical">Technical (skills-led, IT/engineering)</option>
+        </select>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+          Phone (so we can reach you with questions)
+        </label>
+        <input type="tel" name="phone" placeholder="+27 31 555 1234"
+               style="width: 100%; padding: 12px 14px; font-family: var(--sans); font-size: 15px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink);">
+      </div>
+
+      <div style="margin-top: 24px;">
+        <label style="display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+          Anything else we should know? (optional)
+        </label>
+        <textarea name="additional_notes" rows="3" placeholder="e.g. specific job ads you're targeting, companies you're applying to, accomplishments to emphasise"
+                  style="width: 100%; padding: 12px 14px; font-family: var(--sans); font-size: 14px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); resize: vertical;"></textarea>
+      </div>
+
+      <div id="rewriteFormError" style="display: none; background: rgba(122, 31, 31, 0.08); color: var(--oxblood); padding: 12px; margin-top: 16px; font-size: 13px; border-left: 3px solid var(--oxblood);"></div>
+
+      <button type="submit" id="rewriteSubmit" style="width: 100%; margin-top: 32px; font-family: var(--sans); font-size: 15px; font-weight: 500; background: var(--ink); color: var(--paper); padding: 16px; border: none; cursor: pointer;">
+        Submit intake — start my rewrite
+      </button>
+
+    </form>
+
+    <!-- Success panel (shown after submission) -->
+    <div id="rewriteSuccess" style="display: none; max-width: 720px; background: var(--paper); padding: 40px; border: 1px solid var(--sage); box-shadow: 8px 8px 0 var(--sage);">
+      <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage); margin-bottom: 16px;">
+        ✓ Intake received
+      </div>
+      <h3 style="font-family: var(--serif); font-size: 28px; font-weight: 500; line-height: 1.2; margin-bottom: 16px; font-variation-settings: 'opsz' 48;">
+        We've got everything we need.
+      </h3>
+      <p style="font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 16px;">
+        We'll review your intake within 24 hours, get to work on the rewrite,
+        and have your finished CV in your inbox within 3–5 business days. If
+        we need anything clarified along the way, we'll WhatsApp or email you.
+      </p>
+      <p style="font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink-soft);">
+        In the meantime, you can <a href="/upgrade/report?scan={{ scan_id }}" style="color: var(--oxblood);">view your full diagnostic report</a>
+        — same content as Tier 2, included in your rewrite.
+      </p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('rewriteForm');
+const errorBox = document.getElementById('rewriteFormError');
+const submitBtn = document.getElementById('rewriteSubmit');
+const successPanel = document.getElementById('rewriteSuccess');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting…';
+
+  const formData = new FormData(form);
+
+  try {
+    const response = await fetch('/upgrade/rewrite', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: 'Submission failed.' }));
+      throw new Error(err.detail || 'Submission failed.');
+    }
+
+    form.style.display = 'none';
+    successPanel.style.display = 'block';
+    successPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit intake — start my rewrite';
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Scan not found — Cited{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding: 100px 0;">
+  <div class="container" style="max-width: 680px; text-align: center;">
+    <div class="edition-line" style="justify-content: center;">Vol. I  ·  Scan Not Found</div>
+    <h1 style="text-align: center;">
+      We couldn't find <em>that scan.</em>
+    </h1>
+    <p class="hero-lede" style="margin: 0 auto 40px; font-style: normal; max-width: 540px;">
+      Either the scan ID is wrong, or the scan was deleted. Scans are kept
+      for 30 days; after that they're permanently removed.
+    </p>
+    <a href="/" class="btn-primary">
+      Run a new scan
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+{% endblock %}

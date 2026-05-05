@@ -15,42 +15,58 @@ cited/
 │   ├── routes/
 │   │   ├── scan.py          ← /api/scan/free  (Tier 1 free scan)
 │   │   ├── payment.py       ← /api/payment/checkout/{tier}  (PayFast redirect)
-│   │   └── webhook.py       ← /api/webhook/payfast  (PayFast ITN)
-│   ├── scorer.py            ← ★ Plug your existing ATS scoring tool in here
+│   │   ├── webhook.py       ← /api/webhook/payfast  (PayFast ITN, audit-logged)
+│   │   └── upgrade.py       ← /upgrade flow (selection + report + rewrite intake)
+│   ├── scoring/             ← Heuristic ATS scoring engine (see below)
+│   ├── scorer.py            ← Backwards-compat shim → app/scoring/
 │   ├── parsers.py           ← PDF + DOCX text extraction
 │   ├── models.py            ← Pydantic types
-│   ├── db.py                ← SQLite persistence
-│   └── email.py             ← Buttondown integration
+│   ├── db.py                ← SQLite persistence (scans, rewrite_intake, payments)
+│   └── templating.py        ← Shared Jinja templates instance
 ├── templates/
-│   └── index.html           ← Landing page (Jinja2)
+│   ├── base.html            ← Shared chrome (head, masthead, footer)
+│   ├── index.html           ← Landing page
+│   ├── upgrade.html         ← Tier 2/3 selection
+│   ├── upgrade_unlocked.html ← Tier 2 detailed report (the R99 deliverable)
+│   ├── upgrade_rewrite.html ← Tier 3 intake form
+│   ├── upgrade_return.html  ← Post-payment redirect target
+│   ├── upgrade_cancel.html  ← Cancelled-payment soft landing
+│   └── upgrade_not_found.html ← 404 for invalid scan IDs
 ├── static/
 │   ├── styles.css
-│   └── app.js               ← Form submission, FAQ, scanner animation
-└── data/                    ← SQLite DB lives here (gitignored)
+│   └── app.js
+└── data/                    ← SQLite DB (gitignored)
 ```
 
-## The seam to know about
+## The scoring engine
 
-`app/scorer.py` is the one file you'll modify to plug in your existing v3
-ATS scoring tool with ZA/UK/US regional profiles. The function signature is:
+The scorer is heuristic-only — no LLM calls, no per-scan API costs. The total
+out of 100 is a weighted sum of four components:
 
-```python
-def score_cv(
-    cv_text: str,
-    job_description: str = "",
-    region: str = "auto",
-) -> ScoringResult:
-    ...
-```
+| Component       | Weight | What it measures                                  |
+|-----------------|--------|---------------------------------------------------|
+| Parseability    | 40%    | Can an ATS parser actually read this file?        |
+| Structure       | 20%    | Sections, contact details, dates, region format   |
+| Keyword fit     | 25%    | Match against job ad (or industry baseline)       |
+| Content quality | 15%    | Bullets, action verbs, quantified achievements    |
 
-Everything else in the codebase only depends on the `ScoringResult` shape
-defined in `app/models.py`. Replace the body of `score_cv()` with a call into
-your scorer and the rest works without modification.
+**Calibration commitments:**
+- A clean CV without a job ad lands ~70-85
+- A clean CV with a matching job ad can hit 90-96 (96 is the cap)
+- Below 50 is reserved for CVs with real structural problems
+- Above 95 is essentially impossible — there's always something to improve
 
-The placeholder implementation in this repo uses simple heuristics + a Claude
-API call for keyword extraction. It's good enough to test the full end-to-end
-flow before you wire your real scorer in, but the score numbers it produces
-are illustrative only.
+This is a deliberate honesty principle: most online ATS scorers exist to sell
+rewrites, so they're rigged to score everyone low. Cited does the opposite —
+honest scores build trust faster than fake low scores do.
+
+**Regional profiles** (ZA / UK / US) are not cosmetic. Each profile changes:
+phone-number patterns, location markers, document term ("CV" vs "Résumé"),
+expected length, date format, and region-specific certifications.
+
+**To upgrade to LLM-enhanced scoring later:** the seam is `app/scoring/keywords.py`.
+The `_extract_keywords_from_job_ad()` function can be swapped for a Claude API
+call when the funnel converts and per-scan cost is justified.
 
 ## Day 0: from clone to local
 
@@ -95,29 +111,53 @@ to add the merchant credentials.
 3. Add to Replit Secrets:
    - `PAYFAST_MERCHANT_ID`
    - `PAYFAST_MERCHANT_KEY`
-   - `PAYFAST_PASSPHRASE`
+   - `PAYFAST_PASSPHRASE` (only if recurring billing is enabled on your account; for one-off payments leave empty)
    - `PAYFAST_SANDBOX=true`
+   - `PUBLIC_BASE_URL=https://cited.co.za` (or your *.replit.app URL during testing)
 4. Test the full flow end-to-end with sandbox cards.
 5. When confident, switch sandbox credentials for live ones and set
    `PAYFAST_SANDBOX=false`.
 
-The frontend doesn't currently render the upgrade page itself — `/upgrade`
-will 404 until you build it. The scaffolding is all server-side; you need a
-small `templates/upgrade.html` and a route that calls
-`POST /api/payment/checkout/diagnostic` to get the redirect URL.
+## The full upgrade flow (now built)
+
+```
+Free scan       →  /api/scan/free                 (Tier 1 — score on screen)
+   ↓
+Click upgrade   →  /upgrade?scan={id}             (Tier 2 vs Tier 3 selection)
+   ↓
+Click checkout  →  /api/payment/checkout/{tier}   (returns PayFast redirect URL)
+   ↓
+PayFast hosted checkout                           (user pays)
+   ↓
+Two things happen in parallel:
+  - User redirected to /upgrade/return            (polls for ITN confirmation)
+  - PayFast POSTs ITN to /api/webhook/payfast     (verifies + unlocks tier)
+   ↓
+Once tier upgraded:
+  - Tier 2  → /upgrade/report                     (full diagnostic report)
+  - Tier 3  → /upgrade  (renders intake form)     (rewrite intake)
+              ↓
+              POST /upgrade/rewrite                (intake stored, manual rewrite begins)
+```
+
+Every PayFast ITN — successful or rejected — is logged to the `payments` table
+for audit/debugging. Look at `data/cited.db` with any SQLite browser to see
+the trail.
 
 ## What's not built yet
 
-- `/upgrade` page (Tier 2 unlock UI after free scan)
-- `/upgrade/return` and `/upgrade/cancel` redirect handlers
-- The Tier 2 detailed report rendering (full annotations + DIY guide)
-- The Tier 3 rewrite intake flow (Google Form alternative inside the app)
 - POPIA / Privacy / Terms static pages (footer links currently 404)
 - Rate limiting (consider adding slowapi if abuse becomes an issue)
-- Proper logging (currently just print statements)
+- Proper logging (currently just print statements — fine for dev)
+- Operator notification on Tier 3 payment (currently just a print to logs;
+  check `data/cited.db` `rewrite_intake` table for new submissions)
+- Email delivery of any kind. Deliberately dropped for v1 — results live
+  on-screen + recoverable via the saved scan URL. If/when a paid-tier
+  upsell sequence justifies it, transactional service (e.g. Resend) goes
+  here, not a newsletter platform.
 
-These are deliberate omissions for the v1 launch. The free-scan loop is the
-critical path — get that working and converting before building anything else.
+These are intentional v1 omissions. The full payment flow is end-to-end functional;
+these are polish items for Day 30+.
 
 ## Running locally without Replit
 
@@ -138,9 +178,8 @@ Visit http://localhost:8000.
   the "Made with Replit" badge removed.
 - **Reserved VM:** $7+/month if cold starts hurt conversion enough to
   justify always-on. Probably worth it once you're getting >50 scans/day.
-- **Anthropic API:** ~$0.003 per scan with the current Claude Sonnet
-  keyword extraction call. 1000 free scans/month = ~$3.
-- **Buttondown:** Free tier covers up to 100 subscribers, $9/month after.
+- **Anthropic API:** Currently $0 — the heuristic scorer doesn't use Claude.
+  Future LLM-enhanced Tier 2 would run ~$0.003 per scan.
 - **Domain:** ~R250/year (already purchased).
 
 Total at launch: ~$0–$10/month. At 1000 scans/month: ~$15–$30/month.

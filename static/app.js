@@ -106,8 +106,11 @@ function renderResult(data) {
       <ul>${keywordsHtml}</ul>
     </div>
     <p style="font-size: 13px; color: var(--ink-muted); font-family: var(--mono);">
-      A copy has been emailed to you. Want the full diagnostic — line-by-line
-      annotations, complete keyword analysis, region-tuned fix guide?
+      Save this link to come back later: <br>
+      <code style="font-family: var(--mono); background: var(--paper-dark); padding: 2px 8px; word-break: break-all;">cited.co.za/upgrade?scan=${data.scan_id}</code>
+      <br><br>
+      Want the full diagnostic — line-by-line annotations, complete keyword
+      analysis, region-tuned fix guide?
     </p>
     <a href="${data.upgrade_url}" class="result-upgrade">
       Get the full report — R99 →

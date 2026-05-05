@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Payment cancelled — Cited{% endblock %}
+
+{% block content %}
+
+<section class="hero" style="padding: 80px 0;">
+  <div class="container" style="max-width: 720px; text-align: center;">
+    <div class="edition-line" style="justify-content: center;">Vol. I  ·  Payment Cancelled</div>
+    <h1 style="text-align: center;">
+      No problem — <em>no charge made.</em>
+    </h1>
+    <p class="hero-lede" style="margin: 0 auto 40px; font-style: normal; max-width: 580px;">
+      You cancelled the payment, which is completely fine. Your free scan
+      results are still available, and you can come back to upgrade any time
+      in the next 30 days.
+    </p>
+
+    {% if scan_id %}
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <a href="/upgrade?scan={{ scan_id }}" class="btn-primary">
+        Try upgrading again
+        <span class="arrow">→</span>
+      </a>
+      <a href="/" class="btn-secondary">
+        Back to home
+      </a>
+    </div>
+    {% else %}
+    <a href="/" class="btn-primary">
+      Back to home
+      <span class="arrow">→</span>
+    </a>
+    {% endif %}
+
+    <div style="max-width: 540px; margin: 60px auto 0; padding: 24px; background: var(--paper-dark); border-left: 3px solid var(--ink-muted); text-align: left; font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink-soft); font-variation-settings: 'opsz' 24;">
+      <strong style="color: var(--ink); display: block; margin-bottom: 8px;">Hesitating about R99?</strong>
+      Most users who pay it tell us the line-by-line annotations and missing
+      keyword list paid for themselves the first time they tweaked their CV
+      for an application. The free scan tells you <em>that</em> something is
+      wrong; the R99 report tells you <em>what</em> and <em>where</em>.
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

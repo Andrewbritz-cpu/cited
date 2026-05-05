@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Cited — ATS CV Scorer{% endblock %}</title>
+<meta name="description" content="{% block description %}Free ATS scan for South African job seekers. See exactly how your CV scores against the systems that screen 75% of applications before a human ever reads them.{% endblock %}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/styles.css">
+{% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<header class="masthead">
+  <div class="container masthead-inner">
+    <a href="/" style="text-decoration: none; color: inherit;" class="wordmark">Cited<span class="dot">.</span></a>
+    <div class="masthead-meta">
+      <span>System online · Scans running</span>
+    </div>
+    <a href="/#scan" class="nav-cta">{% block nav_cta %}Scan my CV{% endblock %}</a>
+  </div>
+</header>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <div class="container footer-inner">
+    <div>© 2026 Cited · Durban, ZA</div>
+    <div>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/popia">POPIA</a>
+      <a href="mailto:hello@cited.co.za">hello@cited.co.za</a>
+    </div>
+  </div>
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
