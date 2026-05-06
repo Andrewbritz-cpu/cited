@@ -76,15 +76,16 @@ async def create_checkout(tier: TierKey, scan_id: str):
 
     tier_config = TIERS[tier]
 
-    # PayFast required and recommended fields. The order matters for the
-    # signature calculation below — PayFast expects fields in the order
-    # they're sent in the URL/POST, not alphabetical.
-    #
-    # name_first must be alphanumeric-ish only. Email local parts often
-    # contain dots, plus signs, and digits — strip those, fall back to
-    # "Customer" if nothing usable remains.
+    # name_first must be alphabetic and at least 2 characters. PayFast
+    # rejects single-character or empty first names. Email local parts
+    # are stripped to alpha-only; if too short, fall back to "Customer".
     raw_name = scan.get("email", "").split("@")[0]
-    safe_name = "".join(c for c in raw_name if c.isalpha())[:50] or "Customer"
+    alpha_only = "".join(c for c in raw_name if c.isalpha())[:50]
+    safe_name = alpha_only if len(alpha_only) >= 2 else "Customer"
+
+    # Lowercase the email — PayFast may normalise case, which would
+    # cause a signature mismatch if we send the original-case version.
+    email_normalised = scan["email"].strip().lower()
 
     fields = {
         "merchant_id": PAYFAST_MERCHANT_ID,
@@ -93,7 +94,8 @@ async def create_checkout(tier: TierKey, scan_id: str):
         "cancel_url": f"{PUBLIC_BASE_URL}/upgrade/cancel?scan={scan_id}",
         "notify_url": f"{PUBLIC_BASE_URL}/api/webhook/payfast",
         "name_first": safe_name,
-        "email_address": scan["email"],
+        "name_last": "Customer",   # PayFast often requires both name_first and name_last
+        "email_address": email_normalised,
         "m_payment_id": f"{scan_id}:{tier}",   # so we can recover the scan on ITN
         "amount": tier_config["amount"],
         "item_name": tier_config["item_name"],
@@ -158,7 +160,9 @@ async def debug_checkout(tier: TierKey, scan_id: str):
 
     tier_config = TIERS[tier]
     raw_name = scan.get("email", "").split("@")[0]
-    safe_name = "".join(c for c in raw_name if c.isalpha())[:50] or "Customer"
+    alpha_only = "".join(c for c in raw_name if c.isalpha())[:50]
+    safe_name = alpha_only if len(alpha_only) >= 2 else "Customer"
+    email_normalised = scan["email"].strip().lower()
 
     fields = {
         "merchant_id": PAYFAST_MERCHANT_ID,
@@ -167,7 +171,8 @@ async def debug_checkout(tier: TierKey, scan_id: str):
         "cancel_url": f"{PUBLIC_BASE_URL}/upgrade/cancel?scan={scan_id}",
         "notify_url": f"{PUBLIC_BASE_URL}/api/webhook/payfast",
         "name_first": safe_name,
-        "email_address": scan["email"],
+        "name_last": "Customer",
+        "email_address": email_normalised,
         "m_payment_id": f"{scan_id}:{tier}",
         "amount": tier_config["amount"],
         "item_name": tier_config["item_name"],
