@@ -134,3 +134,70 @@ def _payfast_signature(fields: dict, passphrase: str) -> str:
     if passphrase:
         payload += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     return hashlib.md5(payload.encode("utf-8")).hexdigest()
+
+
+@router.get("/debug/{tier}")
+async def debug_checkout(tier: TierKey, scan_id: str):
+    """
+    Return the exact signature payload for a checkout attempt.
+
+    Sandbox-only. Lets us see what we're hashing, what hash we're producing,
+    and whether the passphrase is wired in. Visit this endpoint manually in
+    the browser to diagnose signature mismatches without going through the
+    PayFast UI.
+    """
+    if not PAYFAST_SANDBOX:
+        raise HTTPException(status_code=403, detail="Debug endpoint disabled outside sandbox.")
+
+    if tier not in TIERS:
+        raise HTTPException(status_code=404, detail="Unknown tier.")
+
+    scan = await get_scan(scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found.")
+
+    tier_config = TIERS[tier]
+    raw_name = scan.get("email", "").split("@")[0]
+    safe_name = "".join(c for c in raw_name if c.isalpha())[:50] or "Customer"
+
+    fields = {
+        "merchant_id": PAYFAST_MERCHANT_ID,
+        "merchant_key": PAYFAST_MERCHANT_KEY,
+        "return_url": f"{PUBLIC_BASE_URL}/upgrade/return?scan={scan_id}",
+        "cancel_url": f"{PUBLIC_BASE_URL}/upgrade/cancel?scan={scan_id}",
+        "notify_url": f"{PUBLIC_BASE_URL}/api/webhook/payfast",
+        "name_first": safe_name,
+        "email_address": scan["email"],
+        "m_payment_id": f"{scan_id}:{tier}",
+        "amount": tier_config["amount"],
+        "item_name": tier_config["item_name"],
+        "custom_str1": scan_id,
+        "custom_int1": str(tier_config["tier_id"]),
+    }
+
+    # Build the payload string exactly as we hash it
+    payload_parts = []
+    for key, value in fields.items():
+        if value == "" or value is None:
+            continue
+        payload_parts.append(f"{key}={urllib.parse.quote_plus(str(value))}")
+    payload = "&".join(payload_parts)
+    payload_with_passphrase = payload
+    if PAYFAST_PASSPHRASE:
+        payload_with_passphrase = payload + f"&passphrase={urllib.parse.quote_plus(PAYFAST_PASSPHRASE)}"
+
+    sig_no_passphrase = hashlib.md5(payload.encode("utf-8")).hexdigest()
+    sig_with_passphrase = hashlib.md5(payload_with_passphrase.encode("utf-8")).hexdigest()
+
+    return {
+        "merchant_id_set": bool(PAYFAST_MERCHANT_ID),
+        "merchant_key_set": bool(PAYFAST_MERCHANT_KEY),
+        "passphrase_set": bool(PAYFAST_PASSPHRASE),
+        "passphrase_length": len(PAYFAST_PASSPHRASE) if PAYFAST_PASSPHRASE else 0,
+        "fields_in_order": list(fields.keys()),
+        "payload_no_passphrase": payload,
+        "payload_with_passphrase": payload_with_passphrase if PAYFAST_PASSPHRASE else "(passphrase not set)",
+        "signature_no_passphrase": sig_no_passphrase,
+        "signature_with_passphrase": sig_with_passphrase if PAYFAST_PASSPHRASE else "(passphrase not set)",
+        "signature_being_sent": sig_with_passphrase if PAYFAST_PASSPHRASE else sig_no_passphrase,
+    }
