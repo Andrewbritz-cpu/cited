@@ -99,8 +99,11 @@ async def create_checkout(tier: TierKey, scan_id: str):
         "m_payment_id": f"{scan_id}:{tier}",   # so we can recover the scan on ITN
         "amount": tier_config["amount"],
         "item_name": tier_config["item_name"],
-        "custom_str1": scan_id,
+        # PayFast spec requires all custom_int* before all custom_str*.
+        # Don't reorder these — PayFast's troubleshooter rejects with
+        # "Parameter order is incorrect" if custom_str1 comes before custom_int1.
         "custom_int1": str(tier_config["tier_id"]),
+        "custom_str1": scan_id,
     }
 
     fields["signature"] = _payfast_signature(fields, PAYFAST_PASSPHRASE)
@@ -176,8 +179,8 @@ async def debug_checkout(tier: TierKey, scan_id: str):
         "m_payment_id": f"{scan_id}:{tier}",
         "amount": tier_config["amount"],
         "item_name": tier_config["item_name"],
-        "custom_str1": scan_id,
         "custom_int1": str(tier_config["tier_id"]),
+        "custom_str1": scan_id,
     }
 
     # Build the payload string exactly as we hash it
