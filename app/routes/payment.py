@@ -15,7 +15,7 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
-from app.db import get_scan
+from app.db import get_scan, upgrade_scan_tier
 
 router = APIRouter()
 
@@ -209,3 +209,32 @@ async def debug_checkout(tier: TierKey, scan_id: str):
         "signature_with_passphrase": sig_with_passphrase if PAYFAST_PASSPHRASE else "(passphrase not set)",
         "signature_being_sent": sig_with_passphrase if PAYFAST_PASSPHRASE else sig_no_passphrase,
     }
+
+
+@router.post("/manual-unlock/{scan_id}")
+async def manual_unlock(scan_id: str):
+    """
+    Fallback tier unlock when PayFast's ITN doesn't arrive.
+
+    This is a safety net for sandbox testing and edge cases where PayFast
+    successfully processes the payment (user was redirected to return_url)
+    but the ITN webhook fails or is delayed. Only upgrades tier 1 → 2
+    (the diagnostic report). Tier 3 (rewrite) always requires ITN
+    confirmation since it triggers human work.
+
+    In production, the ITN handles this. The manual unlock exists because
+    PayFast's sandbox ITN delivery is unreliable.
+    """
+    scan = await get_scan(scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found.")
+
+    if scan["tier"] >= 2:
+        # Already unlocked — just reload.
+        return {"status": "already_unlocked", "tier": scan["tier"]}
+
+    upgraded = await upgrade_scan_tier(scan_id, tier=2, payment_id="manual-unlock")
+    if not upgraded:
+        raise HTTPException(status_code=500, detail="Could not upgrade scan.")
+
+    return {"status": "ok", "tier": 2}

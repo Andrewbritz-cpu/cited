@@ -56,11 +56,15 @@
       </div>
 
       <div id="timeoutWarning" style="display: none; max-width: 580px; margin: 40px auto 0; padding: 20px; background: var(--paper-dark); border-left: 3px solid var(--oxblood); text-align: left; font-size: 14px; line-height: 1.5;">
-        <strong>Taking longer than usual.</strong> If this persists, your payment
-        is still safe — PayFast's confirmation will arrive eventually and unlock
-        your tier. You can also check back later using your scan link, or
-        <a href="mailto:hello@cited.co.za?subject=Payment%20Status%20Check%20-%20{{ scan_id }}">email us</a>
-        with your scan ID: <code style="font-family: var(--mono); background: var(--paper); padding: 2px 6px;">{{ scan_id }}</code>
+        <strong>Taking longer than usual.</strong> PayFast confirmed the payment
+        but the server notification hasn't arrived yet. You can unlock your
+        report now — your payment is safe.
+        <div style="text-align: center; margin-top: 16px;">
+          <button id="manualUnlock" class="btn-primary" onclick="manualUnlockTier()" style="cursor: pointer;">
+            Unlock my report now
+            <span class="arrow">→</span>
+          </button>
+        </div>
       </div>
     {% endif %}
 
@@ -76,7 +80,7 @@
 // PayFast's ITN should arrive within 5-15 seconds of the user's redirect.
 const scanId = "{{ scan_id }}";
 let pollAttempts = 0;
-const maxAttempts = 20;  // 60 seconds total
+const maxAttempts = 10;  // 30 seconds — then show manual unlock
 
 const pollInterval = setInterval(async () => {
   pollAttempts++;
@@ -104,6 +108,26 @@ const pollInterval = setInterval(async () => {
     document.getElementById('timeoutWarning').style.display = 'block';
   }
 }, 3000);
+
+async function manualUnlockTier() {
+  const btn = document.getElementById('manualUnlock');
+  btn.disabled = true;
+  btn.innerHTML = 'Unlocking…';
+
+  try {
+    const response = await fetch(`/api/payment/manual-unlock/${scanId}`, {
+      method: 'POST',
+    });
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      const data = await response.json();
+      btn.innerHTML = data.detail || 'Error — please email hello@cited.co.za';
+    }
+  } catch (err) {
+    btn.innerHTML = 'Network error — please reload the page';
+  }
+}
 </script>
 {% endif %}
 {% endblock %}
