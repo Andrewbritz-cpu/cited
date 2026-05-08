@@ -31,13 +31,15 @@ class ScoringResult(BaseModel):
 class FreeScanResponse(BaseModel):
     """What the free-tier API returns to the frontend.
 
-    Deliberately limited — full annotations and complete keyword gap analysis
-    are gated behind the R99 Tier 2 upgrade.
+    Deliberately limited — full keyword lists, AI bullet rewrites, and
+    sector benchmarking are gated behind the R99 Tier 2 upgrade.
     """
     scan_id: str
     score: int
     region: Region
     rejection_estimate: int
     structural_issues: List[StructuralIssue]  # capped at 3 by the route handler
-    missing_keywords: List[str]               # capped at 5 by the route handler
+    missing_keyword_count: int                # count only — actual list is Tier 2
+    matched_keyword_count: int                # count only — actual list is Tier 2
+    total_issue_count: int                    # total issues found (free shows 3)
     upgrade_url: str

@@ -83,9 +83,18 @@ function renderResult(data) {
     `<li><strong>${escapeHtml(issue.severity.toUpperCase())}:</strong> ${escapeHtml(issue.description)}</li>`
   ).join('') || '<li>No critical structural issues detected.</li>';
 
-  const keywordsHtml = (data.missing_keywords || []).map(kw =>
-    `<li>${escapeHtml(kw)}</li>`
-  ).join('') || '<li>No specific keyword gaps to flag.</li>';
+  const hiddenIssues = (data.total_issue_count || 0) - (data.structural_issues || []).length;
+  const hiddenIssuesNote = hiddenIssues > 0
+    ? `<li style="color: var(--ink-muted); font-style: italic;">+ ${hiddenIssues} more issue${hiddenIssues > 1 ? 's' : ''} in the full report</li>`
+    : '';
+
+  const missingKw = data.missing_keyword_count || 0;
+  const matchedKw = data.matched_keyword_count || 0;
+  const keywordTeaser = missingKw > 0
+    ? `<strong>${missingKw} missing keywords</strong> detected, ${matchedKw} matched. Unlock the full report to see exactly which keywords you're missing and how to add them.`
+    : matchedKw > 0
+    ? `<strong>${matchedKw} keywords matched</strong>, no critical gaps. Full keyword analysis available in the report.`
+    : `Keyword analysis available in the full report.`;
 
   resultPanel.innerHTML = `
     <div class="result-score-row">
@@ -99,21 +108,20 @@ function renderResult(data) {
     </div>
     <div class="result-section">
       <h4>Top structural issues</h4>
-      <ul>${issuesHtml}</ul>
+      <ul>${issuesHtml}${hiddenIssuesNote}</ul>
     </div>
     <div class="result-section">
-      <h4>Missing keywords</h4>
-      <ul>${keywordsHtml}</ul>
+      <h4>Keyword analysis</h4>
+      <p style="font-size: 14px; line-height: 1.5; color: var(--ink-soft);">
+        ${keywordTeaser}
+      </p>
     </div>
     <p style="font-size: 13px; color: var(--ink-muted); font-family: var(--mono);">
       Save this link to come back later: <br>
       <code style="font-family: var(--mono); background: var(--paper-dark); padding: 2px 8px; word-break: break-all;">cited.co.za/upgrade?scan=${data.scan_id}</code>
-      <br><br>
-      Want the full diagnostic — line-by-line annotations, complete keyword
-      analysis, region-tuned fix guide?
     </p>
     <a href="${data.upgrade_url}" class="result-upgrade">
-      Get the full report — R99 →
+      Unlock the full report — R99 →
     </a>
   `;
   resultPanel.classList.add('visible');

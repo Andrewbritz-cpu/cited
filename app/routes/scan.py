@@ -159,7 +159,9 @@ async def free_scan(
         region=result.region,
         rejection_estimate=result.rejection_estimate,
         structural_issues=result.structural_issues[:3],
-        missing_keywords=result.missing_keywords[:5],
+        missing_keyword_count=len(result.missing_keywords),
+        matched_keyword_count=len(result.score_breakdown.get("matched_keywords", [])),
+        total_issue_count=len(result.structural_issues),
         upgrade_url=f"/upgrade?scan={scan_id}",
     )
 

@@ -140,13 +140,41 @@ async def upgrade_report(request: Request, scan: str):
         # Not paid yet — bounce back to the upsell
         return RedirectResponse(url=f"/upgrade?scan={scan}", status_code=303)
 
+    full_result = scan_record.get("full_result", {})
+
+    # --- Sector benchmarking ---
+    from app.benchmarks import format_benchmark_context
+    from app.scoring.industry import detect_industry
+    detected = detect_industry(scan_record.get("cv_text", ""))
+    benchmark = format_benchmark_context(scan_record["score"], detected.code)
+
+    # --- AI bullet rewrites ---
+    from app.ai_rewrites import extract_and_rewrite_bullets
+    rewrites = extract_and_rewrite_bullets(scan_record.get("cv_text", ""), max_rewrites=5)
+
+    # --- Per-fix score projections ---
+    issues_with_projection = []
+    cumulative = 0
+    for issue in full_result.get("structural_issues", []):
+        penalty = issue.get("penalty", 0)
+        cumulative += penalty
+        projected = min(scan_record["score"] + cumulative, 96)
+        issues_with_projection.append({
+            **issue,
+            "projected_score_after_fix": scan_record["score"] + penalty,
+            "projected_score_after_all": projected,
+        })
+
     return templates.TemplateResponse(
         request=request,
         name="upgrade_unlocked.html",
         context={
             "scan_id": scan,
             "scan": scan_record,
-            "result": scan_record.get("full_result", {}),
+            "result": full_result,
+            "benchmark": benchmark,
+            "rewrites": [r.__dict__ for r in rewrites],
+            "issues_with_projection": issues_with_projection,
         },
     )
 
@@ -205,3 +233,152 @@ async def submit_rewrite_intake(
     )
 
     return {"status": "ok", "intake_id": intake_id}
+
+
+@router.get("/upgrade/report/pdf")
+async def upgrade_report_pdf(scan: str):
+    """
+    Generate and return a PDF version of the Tier 2 diagnostic report.
+
+    Only available for Tier 2+ scans. Uses reportlab to build a branded
+    PDF the user can save, print, or share.
+    """
+    scan_record = await get_scan(scan)
+    if not scan_record:
+        raise HTTPException(status_code=404, detail="Scan not found.")
+
+    if scan_record["tier"] < 2:
+        raise HTTPException(status_code=403, detail="Report not unlocked.")
+
+    full_result = scan_record.get("full_result", {})
+    bd = full_result.get("score_breakdown", {})
+
+    from app.benchmarks import format_benchmark_context
+    from app.scoring.industry import detect_industry
+    from app.ai_rewrites import extract_and_rewrite_bullets
+
+    detected = detect_industry(scan_record.get("cv_text", ""))
+    benchmark = format_benchmark_context(scan_record["score"], detected.code)
+    rewrites = extract_and_rewrite_bullets(scan_record.get("cv_text", ""), max_rewrites=5)
+
+    # --- Build PDF ---
+    import io
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib.colors import HexColor
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable,
+    )
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER
+    from fastapi.responses import StreamingResponse
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=25*mm, rightMargin=25*mm,
+                            topMargin=20*mm, bottomMargin=20*mm)
+
+    oxblood = HexColor("#7A1F1F")
+    ink = HexColor("#1A1A18")
+    ink_muted = HexColor("#6B6B6B")
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle("ReportTitle", fontName="Helvetica-Bold", fontSize=22,
+                              textColor=oxblood, spaceAfter=6))
+    styles.add(ParagraphStyle("SectionHead", fontName="Helvetica-Bold", fontSize=14,
+                              textColor=ink, spaceBefore=18, spaceAfter=8))
+    styles.add(ParagraphStyle("SubHead", fontName="Helvetica-Bold", fontSize=11,
+                              textColor=ink, spaceBefore=10, spaceAfter=4))
+    styles.add(ParagraphStyle("Body", fontName="Helvetica", fontSize=10,
+                              textColor=ink, leading=14, spaceAfter=6))
+    styles.add(ParagraphStyle("Small", fontName="Helvetica", fontSize=8,
+                              textColor=ink_muted, leading=10))
+    styles.add(ParagraphStyle("Score", fontName="Helvetica-Bold", fontSize=36,
+                              textColor=oxblood, alignment=TA_CENTER))
+
+    story = []
+
+    # Header
+    story.append(Paragraph("Cited.", styles["ReportTitle"]))
+    story.append(Paragraph("Full Diagnostic Report", styles["SectionHead"]))
+    story.append(Paragraph(f"Scan ID: {scan} &nbsp;|&nbsp; Region: {scan_record['region']} &nbsp;|&nbsp; "
+                           f"Email: {scan_record.get('email', 'N/A')}", styles["Small"]))
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width="100%", thickness=1, color=ink))
+    story.append(Spacer(1, 10))
+
+    # Score
+    story.append(Paragraph(f"{scan_record['score']} / 100", styles["Score"]))
+    story.append(Spacer(1, 6))
+
+    # Score breakdown table
+    score_data = [
+        ["Parseability", "Structure", "Keywords", "Content"],
+        [f"{bd.get('parseability',0)}/{bd.get('parseability_max',40)}",
+         f"{bd.get('structure',0)}/{bd.get('structure_max',20)}",
+         f"{bd.get('keywords',0)}/{bd.get('keywords_max',25)}",
+         f"{bd.get('content',0)}/{bd.get('content_max',15)}"],
+    ]
+    t = Table(score_data, colWidths=[doc.width/4]*4)
+    t.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.5, ink_muted),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 10))
+
+    # Benchmark
+    story.append(Paragraph("Sector Benchmark", styles["SectionHead"]))
+    story.append(Paragraph(benchmark["position_description"], styles["Body"]))
+
+    # Issues
+    story.append(Paragraph("All Issues Detected", styles["SectionHead"]))
+    for issue in full_result.get("structural_issues", []):
+        sev = issue.get("severity", "").upper()
+        penalty = issue.get("penalty", 0)
+        desc = issue.get("description", "")
+        itype = issue.get("type", "").replace("_", " ").title()
+        story.append(Paragraph(
+            f"<b>{itype}</b> &nbsp;[{sev} · −{penalty} pts] — {desc}",
+            styles["Body"],
+        ))
+
+    # Keywords
+    story.append(Paragraph("Keyword Analysis", styles["SectionHead"]))
+    matched = bd.get("matched_keywords", [])
+    missing = full_result.get("missing_keywords", [])
+    if matched:
+        story.append(Paragraph(f"<b>Matched ({len(matched)}):</b> {', '.join(matched)}", styles["Body"]))
+    if missing:
+        story.append(Paragraph(f"<b>Missing ({len(missing)}):</b> {', '.join(missing)}", styles["Body"]))
+
+    # AI Rewrites
+    if rewrites:
+        story.append(Paragraph("Bullet Point Improvements", styles["SectionHead"]))
+        for i, r in enumerate(rewrites, 1):
+            story.append(Paragraph(f"<b>Bullet {i} — Original:</b>", styles["SubHead"]))
+            story.append(Paragraph(f"<i>{r.original[:200]}</i>", styles["Body"]))
+            story.append(Paragraph(f"<b>Suggested:</b>", styles["SubHead"]))
+            story.append(Paragraph(r.suggestion[:250], styles["Body"]))
+            story.append(Paragraph(f"<b>Why:</b> {r.improvement_note}", styles["Small"]))
+            story.append(Spacer(1, 6))
+
+    # Footer
+    story.append(Spacer(1, 20))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=ink_muted))
+    story.append(Paragraph(
+        "Generated by Cited · cited.co.za · This report is available online for 30 days.",
+        styles["Small"],
+    ))
+
+    doc.build(story)
+    buf.seek(0)
+
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=cited-report-{scan[:8]}.pdf"},
+    )
